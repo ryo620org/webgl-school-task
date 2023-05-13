@@ -3,9 +3,12 @@
   padding: 0;
 }
 
-.title {
+body > canvas {
   position: absolute;
-  z-index: 1;
+  z-index: -1;
+  top: 0;
+}
+
+.title {
   font-weight: bold;
-  margin: 1em;
 }
