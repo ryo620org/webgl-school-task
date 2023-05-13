@@ -1,0 +1,23 @@
+{
+  "name": "webgl-school-homework",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "deploy": "firebase deploy"
+  },
+  "dependencies": {
+    "gsap": "^3.11.5",
+    "three": "0.152.2"
+  },
+  "devDependencies": {
+    "@types/three": "0.152.0",
+    "firebase-tools": "^12.0.0",
+    "prettier": "2.8.8",
+    "typescript": "5.0.2",
+    "vite": "4.3.2",
+    "vite-plugin-checker": "0.6.0"
+  }
+}
