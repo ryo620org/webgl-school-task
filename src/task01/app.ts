@@ -100,8 +100,8 @@ export class App {
     const axesSize = 10
     this.helperContainer.add(new THREE.AxesHelper(axesSize))
 
-    const gridSize = 20
-    const divisions = 10
+    const gridSize = App.AREA_SIZE
+    const divisions = App.AREA_SIZE
     this.helperContainer.add(new THREE.GridHelper(gridSize, divisions))
     this.helperContainer.visible = this.guiValue.shouldShowHelper
     this.scene.add(this.helperContainer)
@@ -153,10 +153,10 @@ export class App {
       ease: 'sine',
       onRepeat: () => {
         boxContainer.position.z += App.BOX_SIZE
-        if (boxContainer.position.z > App.AREA_SIZE) {
+        if (boxContainer.position.z > App.AREA_SIZE * 0.5) {
           boxContainer.position.x =
             Math.random() * App.AREA_SIZE - App.AREA_SIZE * 0.5
-          boxContainer.position.z = -App.AREA_SIZE
+          boxContainer.position.z = -App.AREA_SIZE * 0.5
         }
       },
     })
