@@ -11,6 +11,9 @@ export class App {
   private controls: OrbitControls
 
   constructor() {
+    const width = window.innerWidth
+    const height = window.innerHeight
+
     const canvas = document.createElement('canvas')
     document.body.appendChild(canvas)
 
@@ -19,16 +22,12 @@ export class App {
       canvas,
     })
     this.renderer.setClearColor(new THREE.Color(0xdfdfdf))
-    this.renderer.setSize(window.innerWidth, window.innerHeight)
+    this.renderer.setSize(width, height)
+    this.renderer.setPixelRatio(window.devicePixelRatio)
 
     // シーン・カメラ
     this.scene = new THREE.Scene()
-    this.camera = new THREE.PerspectiveCamera(
-      40,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      100.0
-    )
+    this.camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100.0)
     this.camera.position.set(12.0, 12.0, 12.0)
     this.camera.lookAt(new THREE.Vector3(0.0, 0.0, 0.0))
 
@@ -94,8 +93,13 @@ export class App {
   }
 
   private handleResize() {
-    this.renderer.setSize(window.innerWidth, window.innerHeight)
-    this.camera.aspect = window.innerWidth / window.innerHeight
+    const width = window.innerWidth
+    const height = window.innerHeight
+
+    this.renderer.setSize(width, height)
+    this.renderer.setPixelRatio(window.devicePixelRatio)
+
+    this.camera.aspect = width / height
     this.camera.updateProjectionMatrix()
   }
 
