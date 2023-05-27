@@ -125,11 +125,11 @@ export class App {
     })
 
     // GUIコントローラー
-    // const gui = new GUI()
-    // gui.add(this.guiValue, 'shouldShowHelper')
-    // gui.add(this.guiValue, 'wireFrame')
-    // gui.add(this.guiValue, 'autoRotate')
-    // gui.add(this.guiValue, 'fanSwitchIsOn')
+    const gui = new GUI()
+    gui.add(this.guiValue, 'shouldShowHelper')
+    gui.add(this.guiValue, 'wireFrame')
+    gui.add(this.guiValue, 'autoRotate')
+    gui.add(this.guiValue, 'fanSwitchIsOn')
 
     // ヘルパー
     this.helperContainer = new THREE.Object3D()
@@ -183,7 +183,6 @@ export class App {
     this.renderer.setSize(width, height)
     this.renderer.setPixelRatio(window.devicePixelRatio)
 
-    // OrthographicCamera 用のパラメータを求める
     const aspect = window.innerWidth / window.innerHeight
     const scale = App.CAMERA_PARAM.scale
     const horizontal = scale * aspect
@@ -197,6 +196,8 @@ export class App {
 
   public changeTopView() {
     this.camera.position.set(0, 10, 0)
+    this.controls.target = App.CAMERA_PARAM.lookAt
+    this.camera.lookAt(App.CAMERA_PARAM.lookAt)
   }
 
   public changeFrontView() {
