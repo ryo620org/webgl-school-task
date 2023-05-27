@@ -12,3 +12,8 @@ body > canvas {
 .title {
   font-weight: bold;
 }
+
+.buttons {
+  display: flex;
+  gap: 0.5em;
+}

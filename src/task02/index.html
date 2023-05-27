@@ -4,9 +4,35 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="/style.css" rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@primer/css/dist/primer.css"
+    />
     <title>Task 02</title>
   </head>
   <body>
-    TBD
+    <div class="p-4">
+      <h1 class="title mb-2">TASK 02</h1>
+      <p>
+        <a
+          href="https://github.com/ryo620org/webgl-school-task/tree/master/src/task02"
+          target="_blank"
+          >View in Github</a
+        ><br />
+        <a href="/">Back to Index</a>
+      </p>
+      <div class="buttons">
+        <button class="btn btn-sm" type="button" id="topViewButton">
+          TOP (XZ)
+        </button>
+        <button class="btn btn-sm" type="button" id="frontViewButton">
+          FRONT (XY)
+        </button>
+        <button class="btn btn-sm" type="button" id="sideViewButton">
+          SIDE (XZ)
+        </button>
+      </div>
+    </div>
+    <script type="module" src="./main.ts"></script>
   </body>
 </html>
