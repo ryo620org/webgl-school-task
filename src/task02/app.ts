@@ -13,6 +13,7 @@ export class App {
   private helperContainer: THREE.Object3D
   private fanStageGroup: THREE.Group
   private material: THREE.MeshPhongMaterial
+  private gui: GUI
   private fans: Fan[]
 
   private guiValue: {
@@ -28,7 +29,7 @@ export class App {
   static CLEAR_COLOR = 0xdfdfdf
   static get CAMERA_PARAM() {
     const aspect = window.innerWidth / window.innerHeight
-    const scale = 8
+    const scale = 9
     const horizontal = scale * aspect
     const vertiacal = scale
     return {
@@ -54,7 +55,7 @@ export class App {
       shouldShowHelper: false,
       wireFrame: false,
       autoRotate: true,
-      fanSwitchIsOn: true,
+      fanSwitchIsOn: false,
     }
 
     const canvas = document.createElement('canvas')
@@ -125,11 +126,11 @@ export class App {
     })
 
     // GUIコントローラー
-    const gui = new GUI()
-    gui.add(this.guiValue, 'shouldShowHelper')
-    gui.add(this.guiValue, 'wireFrame')
-    gui.add(this.guiValue, 'autoRotate')
-    gui.add(this.guiValue, 'fanSwitchIsOn')
+    this.gui = new GUI()
+    this.gui.add(this.guiValue, 'shouldShowHelper').name('show helper')
+    this.gui.add(this.guiValue, 'wireFrame').name('show wireframe')
+    this.gui.add(this.guiValue, 'autoRotate').name('auto rotate')
+    this.gui.add(this.guiValue, 'fanSwitchIsOn').name('fan switch')
 
     // ヘルパー
     this.helperContainer = new THREE.Object3D()
@@ -146,6 +147,8 @@ export class App {
     // リサイズ購読
     window.addEventListener('resize', this.handleResize.bind(this), false)
     console.log(this.controls)
+
+    this.autoSwitchOn(1000)
   }
 
   public render() {
@@ -192,6 +195,15 @@ export class App {
     this.camera.top = vertiacal
     this.camera.bottom = -vertiacal
     this.camera.updateProjectionMatrix()
+  }
+
+  private autoSwitchOn(msec: number) {
+    setTimeout(() => {
+      this.guiValue.fanSwitchIsOn = true
+      this.gui.controllers.forEach((ctrl) => {
+        ctrl.updateDisplay()
+      })
+    }, msec)
   }
 
   public changeTopView() {
