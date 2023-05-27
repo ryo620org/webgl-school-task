@@ -1,6 +1,6 @@
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import * as THREE from 'three'
-// import GUI from 'lil-gui'
+import GUI from 'lil-gui'
 import { Fan } from './fan'
 
 export class App {
