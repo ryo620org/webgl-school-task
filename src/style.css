@@ -17,3 +17,9 @@ body > canvas {
   display: flex;
   gap: 0.5em;
 }
+
+@media screen and (max-width: 768px) {
+  .lil-gui {
+    display: none !important;
+  }
+}

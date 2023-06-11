@@ -7,9 +7,7 @@ export class Earth extends THREE.Group {
 
   private treeManager: TreeManager
 
-  private static RADIUS = 24
-
-  constructor(earthColor: number, greenColor: number) {
+  constructor(radius: number, earthColor: number, greenColor: number) {
     super()
 
     this.earthMaterial = new THREE.MeshPhongMaterial({
@@ -23,16 +21,12 @@ export class Earth extends THREE.Group {
     })
 
     const sphere = new THREE.Mesh(
-      new THREE.IcosahedronGeometry(24, 2),
+      new THREE.IcosahedronGeometry(radius, 2),
       this.earthMaterial
     )
     this.add(sphere)
 
-    this.treeManager = new TreeManager(
-      this,
-      Earth.RADIUS + 1.3,
-      this.greenMaterial
-    )
+    this.treeManager = new TreeManager(this, radius + 1.3, this.greenMaterial)
     this.treeManager.createTree(30, 140)
     this.treeManager.createTree(40, 140)
 
@@ -55,7 +49,9 @@ export class Earth extends THREE.Group {
     this.treeManager.createTree(90, 180)
   }
 
-  public update() {}
+  public update() {
+    this.rotation.y += 0.0001
+  }
 
   public setWireFrame(value: boolean) {
     this.earthMaterial.wireframe = value

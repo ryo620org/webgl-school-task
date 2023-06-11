@@ -10,6 +10,7 @@ export class WebGLApp {
   private renderer: THREE.WebGLRenderer
   private scene: THREE.Scene
   private camera: THREE.OrthographicCamera
+  private fpsCamera: THREE.PerspectiveCamera
   private directionalLight: THREE.DirectionalLight
   private ambientLight: THREE.AmbientLight
   private controls: OrbitControls
@@ -44,7 +45,8 @@ export class WebGLApp {
     const horizontal = scale * aspect
     const vertiacal = scale
     return {
-      SCALE: scale,
+      TPS_SCALE: scale,
+      FPS_SCALE: scale / 3,
       LEFT: -horizontal,
       RIGHT: horizontal,
       TOP: vertiacal,
@@ -54,10 +56,13 @@ export class WebGLApp {
       X: 200,
       Y: 50,
       Z: 50,
-      TILT: 24,
+      FOV: 70,
       LOOK_AT: new THREE.Vector3(0, 0, 0),
     }
   }
+
+  private isFps = false
+  private currentCameraScale = WebGLApp.CAMERA.TPS_SCALE
 
   private guiValue: {
     shouldShowHelper: boolean
@@ -100,7 +105,7 @@ export class WebGLApp {
 
     // scene
     this.scene = new THREE.Scene()
-    this.scene.fog = new THREE.Fog(WebGLApp.COLOR.CLEAR, 200, 290)
+    // this.scene.fog = new THREE.Fog(WebGLApp.COLOR.CLEAR, 200, 300)
 
     // camera
     this.camera = new THREE.OrthographicCamera(
@@ -116,8 +121,19 @@ export class WebGLApp {
       WebGLApp.CAMERA.Y,
       WebGLApp.CAMERA.Z
     )
-    this.camera.rotation.y = THREE.MathUtils.degToRad(WebGLApp.CAMERA.TILT)
     this.camera.lookAt(WebGLApp.CAMERA.LOOK_AT)
+
+    this.fpsCamera = new THREE.PerspectiveCamera(
+      WebGLApp.CAMERA.FOV,
+      width / height,
+      0.1,
+      100.0
+    )
+    this.fpsCamera.position.set(
+      WebGLApp.CAMERA.X,
+      WebGLApp.CAMERA.Y,
+      WebGLApp.CAMERA.Z
+    )
 
     // light
     this.directionalLight = new THREE.DirectionalLight(
@@ -203,7 +219,11 @@ export class WebGLApp {
       })
 
     // earth
-    this.earth = new Earth(this.guiValue.earthColor, this.guiValue.greenColor)
+    this.earth = new Earth(
+      WebGLApp.EARTH_RADIUS,
+      this.guiValue.earthColor,
+      this.guiValue.greenColor
+    )
     this.scene.add(this.earth)
 
     // moon
@@ -220,8 +240,10 @@ export class WebGLApp {
       this.guiValue.airplainColor,
       this.guiValue.airplainSubColor
     )
-    this.airplainB.changeAxis(new THREE.Vector3(0, 0, -1).normalize())
     this.scene.add(this.airplainA, this.airplainB)
+
+    // クォータニオンがうまく当てられないので苦肉の策
+    this.airplainB.changeAxis(new THREE.Vector3(0, 0, -1).normalize())
 
     // cloud manager
     this.cloudManager = new CloudManager(this.scene)
@@ -232,14 +254,12 @@ export class WebGLApp {
 
     const sec = this.clock.getElapsedTime()
 
-    this.controls.update()
-
     this.earth.update()
     this.moon.update(sec)
 
     // 飛行機Aの位置制御
-    const s = Math.sin(sec)
-    const c = Math.cos(sec)
+    let s = Math.sin(sec)
+    let c = Math.cos(sec)
     const airplainANewPosition = new THREE.Vector3(
       0,
       -s * (WebGLApp.EARTH_RADIUS + 2),
@@ -248,6 +268,8 @@ export class WebGLApp {
     this.airplainA.update(airplainANewPosition)
 
     // 飛行機Bの位置制御
+    s = Math.sin(sec * 1.2)
+    c = Math.cos(sec * 1.2)
     const airplainBNewPosition = new THREE.Vector3(
       c * (WebGLApp.EARTH_RADIUS + 2),
       0,
@@ -255,31 +277,74 @@ export class WebGLApp {
     )
     this.airplainB.update(airplainBNewPosition)
 
-    // 煙の制御
+    // 飛行機Bの煙の制御
     if (Math.random() < 0.3) {
-      this.cloudManager.createCloud(this.airplainA.position)
       this.cloudManager.createCloud(this.airplainB.position)
     }
 
-    this.renderer.render(this.scene, this.camera)
+    if (!this.isFps) {
+      // TPS
+      this.controls.update()
+
+      // 飛行機Aの煙制御
+      if (Math.random() < 0.3) {
+        this.cloudManager.createCloud(this.airplainA.position)
+      }
+
+      this.renderer.render(this.scene, this.camera)
+    } else {
+      // FPS
+      this.fpsCamera.position.copy(this.airplainA.position)
+      const lookAtPosition = new THREE.Vector3()
+        .copy(this.airplainA.position)
+        .add(this.airplainA.direction)
+
+      this.fpsCamera.up.copy(this.airplainA.up)
+      this.fpsCamera.lookAt(lookAtPosition)
+
+      this.renderer.render(this.scene, this.fpsCamera)
+    }
   }
 
   public resizeRenderer() {
     if (!this.renderer) return
     const width = window.innerWidth
     const height = window.innerHeight
+    const aspect = window.innerWidth / window.innerHeight
 
     this.renderer.setSize(width, height)
     this.renderer.setPixelRatio(window.devicePixelRatio)
 
-    const aspect = window.innerWidth / window.innerHeight
-    const scale = WebGLApp.CAMERA.SCALE
-    const horizontal = scale * aspect
-    const vertiacal = scale
-    this.camera.left = -horizontal
-    this.camera.right = horizontal
-    this.camera.top = vertiacal
-    this.camera.bottom = -vertiacal
-    this.camera.updateProjectionMatrix()
+    if (!this.isFps) {
+      const scale = this.currentCameraScale
+      const horizontal = scale * aspect
+      const vertiacal = scale
+      this.camera.left = -horizontal
+      this.camera.right = horizontal
+      this.camera.top = vertiacal
+      this.camera.bottom = -vertiacal
+      this.camera.updateProjectionMatrix()
+    } else {
+      this.fpsCamera.aspect = aspect
+      this.fpsCamera.updateProjectionMatrix()
+    }
+  }
+
+  public changeView1st() {
+    this.isFps = true
+    this.controls.enabled = false
+    this.currentCameraScale = WebGLApp.CAMERA.FPS_SCALE
+
+    this.airplainA.visible = false
+    this.resizeRenderer()
+  }
+
+  public changeView3rd() {
+    this.isFps = false
+    this.controls.enabled = true
+    this.currentCameraScale = WebGLApp.CAMERA.TPS_SCALE
+    this.airplainA.visible = true
+
+    this.resizeRenderer()
   }
 }

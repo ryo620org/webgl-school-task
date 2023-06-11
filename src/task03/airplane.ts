@@ -9,7 +9,7 @@ export class Airplane extends THREE.Group {
   private fanL: THREE.Mesh
 
   // 向きの単位ベクトル
-  private direction: THREE.Vector3
+  public direction: THREE.Vector3
 
   constructor(mainColor: number, subColor: number) {
     super()
@@ -137,6 +137,7 @@ export class Airplane extends THREE.Group {
     // 位置を決定する
     this.position.set(newPosition.x, newPosition.y, newPosition.z)
 
+    // ここから回転処理
     // 前回ベクトル・現在ベクトルから外積で法線ベクトルを求め、単位ベクトル化する
     const normalAxis = new THREE.Vector3().crossVectors(
       prevDirection,
@@ -153,6 +154,9 @@ export class Airplane extends THREE.Group {
 
     // 現在のクォータニオンに乗算する
     this.quaternion.premultiply(qtn)
+
+    // FPS様に up を更新する
+    this.up = new THREE.Vector3(0, 1, 0).applyQuaternion(this.quaternion)
   }
 
   public setWireFrame(value: boolean) {
