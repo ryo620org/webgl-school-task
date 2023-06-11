@@ -105,7 +105,7 @@ export class WebGLApp {
 
     // scene
     this.scene = new THREE.Scene()
-    // this.scene.fog = new THREE.Fog(WebGLApp.COLOR.CLEAR, 200, 300)
+    this.scene.fog = new THREE.Fog(WebGLApp.COLOR.CLEAR, 200, 300)
 
     // camera
     this.camera = new THREE.OrthographicCamera(
