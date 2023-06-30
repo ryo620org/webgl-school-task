@@ -4,9 +4,42 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="/style.css" rel="stylesheet" />
-    <title>Task 03</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@primer/css/dist/primer.css"
+    />
+    <link rel="stylesheet" href="/task04.css" />
+    <title>Task 04</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lexend+Peta:wght@200;700&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
-    TBD
+    <div id="cursor" class="cursor">
+      <span id="cursorInner"></span>
+    </div>
+    <div class="p-4" style="position: fixed; z-index: 9999">
+      <h1 class="title mb-2">TASK 04</h1>
+      <p>
+        <a
+          href="https://github.com/ryo620org/webgl-school-task/tree/master/src/task04"
+          target="_blank"
+          >View in Github</a
+        ><br />
+        <a href="/">Back to Index</a>
+      </p>
+    </div>
+    <section class="gallerySection">
+      <p id="pictureId" class="gallerySection__id"></p>
+      <h2 id="artistName"></h2>
+      <p id="description"></p>
+      <p class="gallerySection__date">
+        <a href="" id="date" target="_blank" rel="noopener noreferrer"></a>
+      </p>
+    </section>
+    <script type="module" src="./main.ts"></script>
   </body>
 </html>

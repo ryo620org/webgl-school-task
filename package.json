@@ -9,10 +9,14 @@
     "deploy": "firebase deploy"
   },
   "dependencies": {
+    "@types/animejs": "^3.1.7",
+    "animejs": "^3.2.1",
     "gsap": "^3.11.5",
+    "lodash": "^4.17.21",
     "three": "0.152.2"
   },
   "devDependencies": {
+    "@types/lodash": "^4.14.195",
     "@types/three": "0.152.0",
     "firebase-tools": "^12.0.0",
     "prettier": "2.8.8",
