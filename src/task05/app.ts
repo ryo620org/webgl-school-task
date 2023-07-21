@@ -1,5 +1,3 @@
-import GUI from 'lil-gui'
-
 export class App {
   private canvas: HTMLCanvasElement
   private gl: WebGLRenderingContext
@@ -8,26 +6,25 @@ export class App {
   private position: number[] = []
   private positionStride: number = 3
   private positionVBO?: WebGLBuffer
+  private color: number[] = []
+  private colorStride: number = 3
+  private colorVBO?: WebGLBuffer
 
   private uniformLocation: {
     time: WebGLUniformLocation
   } = { time: 0 }
 
-  private guiValue: {
-    angleCount: number
-  }
-
   private startTime = 0
 
   // 多角形の角の数
-  private ANGLE_COUNT = 32
+  private ANGLE_COUNT = 5
   // 多角形の半径
   private RADIUS = 0.5
   // クリアカラー
   private CLEAR_COLOR = {
-    r: 0.2,
-    g: 0.2,
-    b: 0.2,
+    r: 0.9,
+    g: 0.0,
+    b: 0.1,
   }
 
   constructor(id: string) {
@@ -45,16 +42,6 @@ export class App {
     this.gl = ctx
 
     this.startTime = Date.now()
-
-    const gui = new GUI()
-    this.guiValue = {
-      angleCount: this.ANGLE_COUNT,
-    }
-    gui
-      .add(this.guiValue, 'angleCount', 3, this.ANGLE_COUNT, 1)
-      .onChange(() => {
-        this.initGeometry()
-      })
   }
 
   // 頂点シェーダー、フラグメントシェーダーをテキストファイルとして読み込み、リンクしてプログラムオブジェクトを生成する
@@ -86,29 +73,60 @@ export class App {
   // 多角形の頂点情報をVBOに入れて、GPUと連携する
   initGeometry() {
     // 必要なポリゴン数
-    for (let i = 0; i < this.guiValue.angleCount - 2; i++) {
+    for (let i = 0; i < this.ANGLE_COUNT - 2; i++) {
       this.position.push(this.RADIUS, 0.0, 0.0)
       const x1 =
-        Math.cos(((2 * Math.PI) / this.guiValue.angleCount) * (i + 1)) *
-        this.RADIUS
+        Math.cos(((2 * Math.PI) / this.ANGLE_COUNT) * (i + 1)) * this.RADIUS
       const y1 =
-        Math.sin(((2 * Math.PI) / this.guiValue.angleCount) * (i + 1)) *
-        this.RADIUS
+        Math.sin(((2 * Math.PI) / this.ANGLE_COUNT) * (i + 1)) * this.RADIUS
       this.position.push(x1, y1, 0.0)
       const x2 =
-        Math.cos(((2 * Math.PI) / this.guiValue.angleCount) * (i + 2)) *
-        this.RADIUS
+        Math.cos(((2 * Math.PI) / this.ANGLE_COUNT) * (i + 2)) * this.RADIUS
       const y2 =
-        Math.sin(((2 * Math.PI) / this.guiValue.angleCount) * (i + 2)) *
-        this.RADIUS
+        Math.sin(((2 * Math.PI) / this.ANGLE_COUNT) * (i + 2)) * this.RADIUS
       this.position.push(x2, y2, 0.0)
     }
     this.positionVBO = this.createVBO(this.position)
+
+    // 頂点属性として色を追加しVBOに入れる
+    this.color = [
+      0,
+      1,
+      1, // A
+      1,
+      0,
+      0, // B
+      0,
+      0,
+      1, // C
+      0,
+      1,
+      1, // A
+      0,
+      0,
+      1, // C
+      0,
+      1,
+      0, // D
+      0,
+      1,
+      1, // A
+      0,
+      1,
+      0, // D
+      1,
+      1,
+      0, // E
+    ]
+    this.colorVBO = this.createVBO(this.color)
 
     if (!this.program) throw new Error('program is null')
 
     const attPosition = this.gl.getAttribLocation(this.program, 'position')
     this.enableAttribute(this.positionVBO, attPosition, this.positionStride)
+
+    const attColor = this.gl.getAttribLocation(this.program, 'color')
+    this.enableAttribute(this.colorVBO, attColor, this.colorStride)
 
     const timeLocation = this.gl.getUniformLocation(this.program, 'time')
     if (!timeLocation) throw new Error('timeLocation is null')
@@ -123,7 +141,6 @@ export class App {
 
     const nowTime = (Date.now() - this.startTime) * 0.001
 
-    console.log('clear')
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
     this.gl.clearColor(
       this.CLEAR_COLOR.r,

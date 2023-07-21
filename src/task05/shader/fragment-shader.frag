@@ -1,14 +1,12 @@
 precision mediump float;
 
-// 経過時間を uniform 変数として受け取る
 uniform float time;
+varying vec4 vColor;
 
 void main() {
-  // 時間の経過からサイン波を作り、絶対値で点滅させるようにする @@@
-  float r = abs(sin(time));
-  float g = abs(cos(time));
-  float b = abs(sin(time));
-  // フラグメントの色
-  gl_FragColor = vec4(r, g, b, 1.0);
+  // 時間をsin()に入れ、頂点の色にかける（オリジナルの頂点色〜黒を行き来するようになる）
+  vec3 rgb = vColor.rgb * abs(sin(time));
+
+  gl_FragColor = vec4(rgb, vColor.a);
 }
 
