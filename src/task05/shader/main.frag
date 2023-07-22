@@ -1,5 +1,4 @@
 precision mediump float;
-
 uniform float time;
 varying vec4 vColor;
 
