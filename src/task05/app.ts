@@ -1,6 +1,7 @@
 import { WebGLUtility } from './webgl-utility'
 
 export class App {
+  public isRender = false
   private canvas: HTMLCanvasElement
   private gl: WebGLRenderingContext
   private program?: WebGLProgram
@@ -24,9 +25,9 @@ export class App {
   private RADIUS = 0.5
   // クリアカラー
   private CLEAR_COLOR = {
-    r: 0.9,
-    g: 0.9,
-    b: 0.9,
+    r: 0.3,
+    g: 0.3,
+    b: 0.3,
   }
 
   constructor(id: string) {
@@ -88,13 +89,18 @@ export class App {
     // 必要なポリゴン数
     for (let i = 0; i < this.ANGLE_COUNT; i++) {
       this.position.push(0.0, 0.0, 0.0)
-      const x1 = Math.cos(((2 * Math.PI) / this.ANGLE_COUNT) * i) * this.RADIUS
-      const y1 = Math.sin(((2 * Math.PI) / this.ANGLE_COUNT) * i) * this.RADIUS
+      const radiusA =
+        i % 2 === 0 ? this.RADIUS : this.RADIUS * Math.cos(Math.PI / 5) * 0.5
+      const x1 = Math.cos(((2 * Math.PI) / this.ANGLE_COUNT) * i) * radiusA
+      const y1 = Math.sin(((2 * Math.PI) / this.ANGLE_COUNT) * i) * radiusA
       this.position.push(x1, y1, 0.0)
+
+      const radiusB =
+        i % 2 !== 0 ? this.RADIUS : this.RADIUS * Math.cos(Math.PI / 5) * 0.5
       const x2 =
-        Math.cos(((2 * Math.PI) / this.ANGLE_COUNT) * (i + 1)) * this.RADIUS
+        Math.cos(((2 * Math.PI) / this.ANGLE_COUNT) * (i + 1)) * radiusB
       const y2 =
-        Math.sin(((2 * Math.PI) / this.ANGLE_COUNT) * (i + 1)) * this.RADIUS
+        Math.sin(((2 * Math.PI) / this.ANGLE_COUNT) * (i + 1)) * radiusB
       this.position.push(x2, y2, 0.0)
     }
     this.positionStride = 3
@@ -131,14 +137,7 @@ export class App {
     this.uniformLocation.time = timeLocation
   }
 
-  // レンダリング
-  render() {
-    if (!this.program || !this.uniformLocation) return
-
-    requestAnimationFrame(this.render.bind(this))
-
-    const nowTime = (Date.now() - this.startTime) * 0.001
-
+  setupRendering() {
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
     this.gl.clearColor(
       this.CLEAR_COLOR.r,
@@ -147,6 +146,19 @@ export class App {
       1.0
     )
     this.gl.clear(this.gl.COLOR_BUFFER_BIT)
+  }
+
+  // レンダリング
+  render() {
+    if (!this.program || !this.uniformLocation) return
+
+    if (this.isRender === true) {
+      requestAnimationFrame(this.render.bind(this))
+    }
+
+    this.setupRendering()
+
+    const nowTime = (Date.now() - this.startTime) * 0.001
 
     this.gl.useProgram(this.program)
     this.gl.uniform1f(this.uniformLocation.time, nowTime)

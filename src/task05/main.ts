@@ -7,6 +7,7 @@ window.addEventListener(
 
     await app.loadShader()
     app.initGeometry()
+    app.isRender = true
     app.render()
   },
   false
