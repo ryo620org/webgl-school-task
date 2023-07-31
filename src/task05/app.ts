@@ -1,4 +1,6 @@
 import { WebGLUtility } from './webgl-utility'
+import fragment from './shader/fragment.glsl'
+import vertex from './shader/vertex.glsl'
 
 export class App {
   public isRender = false
@@ -52,20 +54,16 @@ export class App {
     return new Promise(async (resolve, reject) => {
       try {
         // vs
-        const vertexShaderResponse = await fetch('./shader/main.vert')
-        const vertexShaderSource = await vertexShaderResponse.text()
         const vertexShader = WebGLUtility.createShaderObject(
           this.gl,
-          vertexShaderSource,
+          vertex,
           this.gl.VERTEX_SHADER
         )
 
         // fs
-        const fragmentShaderResponse = await fetch('./shader/main.frag')
-        const fragmentShaderSource = await fragmentShaderResponse.text()
         const fragmentShader = WebGLUtility.createShaderObject(
           this.gl,
-          fragmentShaderSource,
+          fragment,
           this.gl.FRAGMENT_SHADER
         )
 

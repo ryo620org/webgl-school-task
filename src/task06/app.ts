@@ -2,6 +2,8 @@ import { WebGLOrbitCamera } from './camera'
 import { Geometry, WebGLGeometry } from './geometry'
 import { Mat4, Vec3 } from './math'
 import { WebGLUtility } from './webgl-utility'
+import fragment from './shader/fragment.glsl'
+import vertex from './shader/vertex.glsl'
 
 export class App {
   private canvas: HTMLCanvasElement
@@ -74,20 +76,16 @@ export class App {
     return new Promise(async (resolve, reject) => {
       try {
         // vs
-        const vertexShaderResponse = await fetch('./shader/main.vert')
-        const vertexShaderSource = await vertexShaderResponse.text()
         const vertexShader = WebGLUtility.createShaderObject(
           this.gl,
-          vertexShaderSource,
+          vertex,
           this.gl.VERTEX_SHADER
         )
 
         // fs
-        const fragmentShaderResponse = await fetch('./shader/main.frag')
-        const fragmentShaderSource = await fragmentShaderResponse.text()
         const fragmentShader = WebGLUtility.createShaderObject(
           this.gl,
-          fragmentShaderSource,
+          fragment,
           this.gl.FRAGMENT_SHADER
         )
 
