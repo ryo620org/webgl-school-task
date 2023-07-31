@@ -1,57 +1,37 @@
-import * as THREE from 'three'
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { App } from './app'
+import { Pane } from 'tweakpane'
 
 window.addEventListener(
   'DOMContentLoaded',
-  () => {
-    const canvas = document.getElementById('canvas') as HTMLCanvasElement
-    const renderer = new THREE.WebGLRenderer({
-      canvas: canvas,
-    })
-    renderer.setClearColor(new THREE.Color(0xdfdfdf))
-    renderer.setSize(window.innerWidth, window.innerHeight)
+  async () => {
+    const app = new App('app')
 
-    const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(
-      60,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      20.0
-    )
-    camera.position.set(0.0, 2.0, 10.0)
-    camera.lookAt(new THREE.Vector3(0.0, 0.0, 0.0))
+    await app.loadShader()
+    app.setupGeometry()
+    app.setupLocation()
+    app.isRender = true
+    app.render()
 
-    const geometry = new THREE.BoxGeometry(1.0, 1.0, 1.0)
-    const material = new THREE.MeshPhongMaterial({
-      color: 0x0074df,
-    })
-
-    const box = new THREE.Mesh(geometry, material)
-    scene.add(box)
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0)
-    directionalLight.position.set(1.0, 1.0, 1.0)
-    scene.add(directionalLight)
-
-    // アンビエントライト（環境光）
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.2)
-    scene.add(ambientLight)
-
-    // コントロール
-    const controls = new OrbitControls(camera, renderer.domElement)
-
-    const render = () => {
-      // 恒常ループの設定
-      requestAnimationFrame(render)
-
-      // コントロールを更新
-      controls.update()
-
-      // レンダラーで描画
-      renderer.render(scene, camera)
+    // Tweakpane を使った GUI の設定
+    const pane = new Pane()
+    const parameter = {
+      culling: true,
+      depthTest: true,
+      rotation: false,
     }
 
-    render()
+    // バックフェイスカリングの有効・無効
+    pane.addInput(parameter, 'culling').on('change', (v) => {
+      app.setCulling(v.value)
+    })
+    // 深度テストの有効・無効
+    pane.addInput(parameter, 'depthTest').on('change', (v) => {
+      app.setDepthTest(v.value)
+    })
+    // 回転の有無
+    pane.addInput(parameter, 'rotation').on('change', (v) => {
+      app.setRotation(v.value)
+    })
   },
   false
 )
