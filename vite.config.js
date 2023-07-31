@@ -1,6 +1,7 @@
 import { resolve } from 'path'
 import { defineConfig } from 'vite'
 import checker from 'vite-plugin-checker'
+import glsl from 'vite-plugin-glsl'
 
 export default defineConfig({
   root: 'src',
@@ -25,6 +26,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    glsl(),
     checker({
       typescript: true,
     }),
