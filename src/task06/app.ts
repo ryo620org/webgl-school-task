@@ -2,8 +2,8 @@ import { WebGLOrbitCamera } from './camera'
 import { Geometry, WebGLGeometry } from './geometry'
 import { Mat4, Vec3 } from './math'
 import { WebGLUtility } from './webgl-utility'
-import fragment from './shader/fragment.glsl'
-import vertex from './shader/vertex.glsl'
+import fragmentSource from './shader/fragment.glsl'
+import vertexSource from './shader/vertex.glsl'
 
 export class App {
   private canvas: HTMLCanvasElement
@@ -15,8 +15,6 @@ export class App {
   private torusIBO?: WebGLBuffer
   private attributeLocation: number[] = []
   private attributeStride: number[] = []
-
-  public isRender = false
 
   private isRotation = false
 
@@ -35,60 +33,59 @@ export class App {
   }
 
   constructor(id: string) {
+    // canvas の生成
     const canvas = <HTMLCanvasElement>document.getElementById(id)
     if (!canvas) throw new Error('canvas not found')
     this.canvas = canvas
 
-    const size = Math.min(window.innerWidth, window.innerHeight)
-    this.canvas.width = size
-    this.canvas.height = size
-
+    // webgl context の取得
     const ctx = canvas.getContext('webgl')
     if (ctx === null) throw new Error('context is null')
-
     this.gl = ctx
 
-    // カメラ制御用インスタンスを生成する
-    const cameraOption = {
-      distance: 5.0, // Z 軸上の初期位置までの距離
+    // camera の生成
+    this.camera = new WebGLOrbitCamera(this.canvas, {
+      distance: 8.0, // Z 軸上の初期位置までの距離
       min: 1.0, // カメラが寄れる最小距離
       max: 10.0, // カメラが離れられる最大距離
-      move: 2.0, // 右ボタンで平行移動する際の速度係数
-    }
-    this.camera = new WebGLOrbitCamera(this.canvas, cameraOption)
+      move: 5.0, // 右ボタンで平行移動する際の速度係数
+    })
 
+    // リサイズ処理
     this.resize()
-    window.addEventListener('resize', this.resize, false)
+    window.addEventListener('resize', this.resize.bind(this), false)
 
+    // カリングフェイス、深度テストのオプション設定
     this.gl.enable(this.gl.CULL_FACE)
     this.gl.enable(this.gl.DEPTH_TEST)
 
+    // 初期時間を取得
     this.startTime = Date.now()
   }
 
+  // canvas をリサイズする
   resize() {
     this.canvas.width = window.innerWidth
     this.canvas.height = window.innerHeight
   }
 
-  // 頂点シェーダー、フラグメントシェーダーをテキストファイルとして読み込み、リンクしてプログラムオブジェクトを生成する
+  // 頂点シェーダー・フラグメントシェーダーを import し、リンクしてプログラムオブジェクトを生成する
   loadShader(): Promise<void> {
     return new Promise(async (resolve, reject) => {
       try {
-        // vs
         const vertexShader = WebGLUtility.createShaderObject(
           this.gl,
-          vertex,
+          vertexSource,
           this.gl.VERTEX_SHADER
         )
 
-        // fs
         const fragmentShader = WebGLUtility.createShaderObject(
           this.gl,
-          fragment,
+          fragmentSource,
           this.gl.FRAGMENT_SHADER
         )
 
+        // vs と fs をリンクしてプログラムオブジェクトを生成する
         this.program = WebGLUtility.createProgramObject(
           this.gl,
           vertexShader,
@@ -106,6 +103,7 @@ export class App {
   setupGeometry() {
     if (!this.program) throw new Error('program is null')
 
+    // ジオメトリの生成
     const row = 32
     const column = 32
     const innerRadius = 0.4
@@ -128,22 +126,27 @@ export class App {
     this.torusIBO = WebGLUtility.createIBO(this.gl, this.torusGeometry.index)
   }
 
+  // location を設定して、shader とのやりとりを可能にする
   setupLocation() {
     if (!this.program) throw new Error('program is null')
 
-    const gl = this.gl
     // attribute location の取得
     this.attributeLocation = [
-      gl.getAttribLocation(this.program, 'position'),
-      gl.getAttribLocation(this.program, 'normal'),
-      gl.getAttribLocation(this.program, 'color'),
+      this.gl.getAttribLocation(this.program, 'position'),
+      this.gl.getAttribLocation(this.program, 'normal'),
+      this.gl.getAttribLocation(this.program, 'color'),
     ]
+
     // attribute のストライド
     this.attributeStride = [3, 3, 4]
-    const mvpMatrix = gl.getUniformLocation(this.program, 'mvpMatrix')
-    const normalMatrix = gl.getUniformLocation(this.program, 'normalMatrix')
+    const mvpMatrix = this.gl.getUniformLocation(this.program, 'mvpMatrix')
+    const normalMatrix = this.gl.getUniformLocation(
+      this.program,
+      'normalMatrix'
+    )
 
     if (!mvpMatrix || !normalMatrix) throw new Error('location is null')
+
     // uniform location の取得
     this.uniformLocation = {
       mvpMatrix,
@@ -152,19 +155,20 @@ export class App {
   }
 
   setupRendering() {
-    const gl = this.gl
     // ビューポートを設定する
-    gl.viewport(0, 0, this.canvas.width, this.canvas.height)
+    this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
+
     // クリアする色と深度を設定する
-    gl.clearColor(
+    this.gl.clearColor(
       this.CLEAR_COLOR.r,
       this.CLEAR_COLOR.g,
       this.CLEAR_COLOR.b,
       1.0
     )
-    gl.clearDepth(1.0)
+    this.gl.clearDepth(1.0)
+
     // 色と深度をクリアする
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT)
   }
 
   // レンダリング
@@ -179,9 +183,7 @@ export class App {
       return
 
     // レンダリングのフラグの状態を見て、requestAnimationFrame を呼ぶか決める
-    if (this.isRender === true) {
-      requestAnimationFrame(this.render.bind(this))
-    }
+    requestAnimationFrame(this.render.bind(this))
 
     // 現在までの経過時間
     const nowTime = (Date.now() - this.startTime) * 0.001
@@ -208,10 +210,10 @@ export class App {
     const vp = Mat4.multiply(p, v)
     const mvp = Mat4.multiply(vp, m)
 
-    // モデル座標変換行列の、逆転置行列を生成する @@@
+    // モデル座標変換行列の、逆転置行列を生成する
     const normalMatrix = Mat4.transpose(Mat4.inverse(m))
 
-    // プログラムオブジェクトを選択し uniform 変数を更新する @@@
+    // プログラムオブジェクトを選択し uniform 変数を更新する
     this.gl.useProgram(this.program)
     this.gl.uniformMatrix4fv(this.uniformLocation.mvpMatrix, false, mvp)
     this.gl.uniformMatrix4fv(

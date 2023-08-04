@@ -9,7 +9,6 @@ window.addEventListener(
     await app.loadShader()
     app.setupGeometry()
     app.setupLocation()
-    app.isRender = true
     app.render()
 
     // Tweakpane を使った GUI の設定
