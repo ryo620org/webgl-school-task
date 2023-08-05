@@ -18,11 +18,18 @@ export class App {
   private attributeStride: number[] = []
 
   private texture?: WebGLTexture
+  private isRight = true // 右向きであるかどうか
 
   private uniformLocation?: {
     mvpMatrix: WebGLUniformLocation
     normalMatrix: WebGLUniformLocation
     textureUnit: WebGLUniformLocation
+  }
+
+  private geoMetoryPosition = {
+    x: 0,
+    y: 0,
+    z: 0,
   }
 
   private startTime = 0
@@ -54,7 +61,7 @@ export class App {
       max: 10.0, // カメラが離れられる最大距離
       move: 5.0, // 右ボタンで平行移動する際の速度係数
     })
-    this.camera.setPoint(Vec3.create(1.0, 1.0, 3.0))
+    this.camera.setPoint(Vec3.create(0.0, 1.0, 3.0))
 
     // リサイズ処理
     this.resize()
@@ -229,7 +236,14 @@ export class App {
 
     // 変換・描画
     // モデル座標変換行列（フラグが立っている場合だけ回転させる）
-    const m = Mat4.identity()
+    const m = Mat4.translate(
+      Mat4.identity(),
+      Vec3.create(
+        this.geoMetoryPosition.x,
+        this.geoMetoryPosition.y,
+        this.geoMetoryPosition.z
+      )
+    )
     const mvp = Mat4.multiply(vp, m)
     const normalMatrix = Mat4.transpose(Mat4.inverse(m))
 
@@ -247,16 +261,28 @@ export class App {
     // texCoord を更新する
     {
       const index = Math.floor(nowTime * 8) % 8
-      this.planeGeometry.texCoord = [
-        0.0 + 0.125 * index,
-        0.0,
-        0.125 + 0.125 * index,
-        0.0,
-        0.0 + 0.125 * index,
-        0.125,
-        0.125 + 0.125 * index,
-        0.125,
-      ]
+      this.planeGeometry.texCoord = this.isRight
+        ? [
+            0.0 + 0.125 * index,
+            0.0,
+            0.125 + 0.125 * index,
+            0.0,
+            0.0 + 0.125 * index,
+            0.125,
+            0.125 + 0.125 * index,
+            0.125,
+          ]
+        : [
+            0.125 + 0.125 * index,
+            0.0,
+            0.0 + 0.125 * index,
+            0.0,
+
+            0.125 + 0.125 * index,
+            0.125,
+            0.0 + 0.125 * index,
+            0.125,
+          ]
       this.planeVBO[3] = WebGLUtility.createVBO(
         this.gl,
         this.planeGeometry.texCoord
@@ -277,5 +303,17 @@ export class App {
       this.gl.UNSIGNED_SHORT,
       0
     )
+  }
+
+  move(x: number, y: number) {
+    let deltaX = x
+    let deltaY = y
+    if (Math.abs(deltaX) > 0) this.isRight = deltaX > 0
+    if (Math.abs(deltaX) > 0 && Math.abs(deltaY) > 0) {
+      deltaX *= 1 / Math.sqrt(2)
+      deltaY *= 1 / Math.sqrt(2)
+    }
+    this.geoMetoryPosition.x += x
+    this.geoMetoryPosition.z += y
   }
 }
