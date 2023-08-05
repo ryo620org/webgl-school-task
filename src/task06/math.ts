@@ -277,8 +277,8 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} [dest] - 結果を格納する行列
    * @return {Mat4} 結果の行列
    */
-  static scale(mat: Mat4, vec: Vec3, dest: Mat4) {
-    const out = dest == null ? Mat4.create() : dest
+  static scale(mat: Mat4, vec: Vec3, dest?: Mat4) {
+    const out = dest === undefined ? Mat4.create() : dest
     out[0] = mat[0] * vec[0]
     out[1] = mat[1] * vec[0]
     out[2] = mat[2] * vec[0]
@@ -304,8 +304,8 @@ export class Mat4 extends Float32Array {
    * @param {Mat4} [dest] - 結果を格納する行列
    * @return {Mat4} 結果の行列
    */
-  static translate(mat: Mat4, vec: Vec3, dest: Mat4) {
-    const out = dest == null ? Mat4.create() : dest
+  static translate(mat: Mat4, vec: Vec3, dest?: Mat4) {
+    const out = dest === undefined ? Mat4.create() : dest
     out[0] = mat[0]
     out[1] = mat[1]
     out[2] = mat[2]
