@@ -28,11 +28,11 @@ export class App {
   private uniformLocation?: {
     mvpMatrix: WebGLUniformLocation
     mMatrix: WebGLUniformLocation
-    // normalMatrix: WebGLUniformLocation
-    // eyePosition: WebGLUniformLocation
-    // lightPosition: WebGLUniformLocation
+    normalMatrix: WebGLUniformLocation
     characterTextureUnit: WebGLUniformLocation
     normalTextureUnit: WebGLUniformLocation
+    // eyePosition: WebGLUniformLocation
+    // lightPosition: WebGLUniformLocation
   }
 
   private geoMetoryPosition = {
@@ -192,15 +192,11 @@ export class App {
 
     const mvpMatrix = this.gl.getUniformLocation(this.program, 'mvpMatrix')
     const mMatrix = this.gl.getUniformLocation(this.program, 'mMatrix')
-    // const eyePosition = this.gl.getUniformLocation(this.program, 'eyePosition')
-    // const normalMatrix = this.gl.getUniformLocation(
-    //   this.program,
-    //   'normalMatrix'
-    // )
-    // const lightPosition = this.gl.getUniformLocation(
-    //   this.program,
-    //   'lightPosition'
-    // )
+    const normalMatrix = this.gl.getUniformLocation(
+      this.program,
+      'normalMatrix'
+    )
+
     const characterTextureUnit = this.gl.getUniformLocation(
       this.program,
       'characterTextureUnit'
@@ -209,24 +205,29 @@ export class App {
       this.program,
       'normalTextureUnit'
     )
+    // const eyePosition = this.gl.getUniformLocation(this.program, 'eyePosition')
+    // const lightPosition = this.gl.getUniformLocation(
+    //   this.program,
+    //   'lightPosition'
+    // )
 
     if (!mvpMatrix) throw new Error('mvpMatrix is null')
     if (!mMatrix) throw new Error('mMatrix is null')
-    // if (!eyePosition) throw new Error('eyePosition is null')
-    // if (!normalMatrix) throw new Error('normalMatrix is null')
-    // if (!lightPosition) throw new Error('lightPosition is null')
+    if (!normalMatrix) throw new Error('normalMatrix is null')
     if (!characterTextureUnit) throw new Error('characterTextureUnit is null')
     if (!normalTextureUnit) throw new Error('normalTextureUnit is null')
+    // if (!eyePosition) throw new Error('eyePosition is null')
+    // if (!lightPosition) throw new Error('lightPosition is null')
 
     // uniform location の取得
     this.uniformLocation = {
       mvpMatrix,
       mMatrix,
-      // eyePosition,
-      // normalMatrix,
-      // lightPosition,
+      normalMatrix,
       characterTextureUnit,
       normalTextureUnit,
+      // eyePosition,
+      // lightPosition,
     }
   }
 
@@ -300,7 +301,7 @@ export class App {
         )
       )
       const mvp = Mat4.multiply(vp, m)
-      // const normalMatrix = Mat4.transpose(Mat4.inverse(m))
+      const normalMatrix = Mat4.transpose(Mat4.inverse(m))
 
       this.gl.activeTexture(this.gl.TEXTURE0)
       this.gl.bindTexture(this.gl.TEXTURE_2D, this.characterTexture)
@@ -312,11 +313,11 @@ export class App {
       this.gl.uniformMatrix4fv(this.uniformLocation.mvpMatrix, false, mvp)
       this.gl.uniformMatrix4fv(this.uniformLocation.mMatrix, false, m)
       // this.gl.uniform3fv(this.uniformLocation.eyePosition, this.camera.position)
-      // this.gl.uniformMatrix4fv(
-      //   this.uniformLocation.normalMatrix,
-      //   false,
-      //   normalMatrix
-      // )
+      this.gl.uniformMatrix4fv(
+        this.uniformLocation.normalMatrix,
+        false,
+        normalMatrix
+      )
       // this.gl.uniform3fv(this.uniformLocation.lightPosition, lightPosition)
       this.gl.uniform1i(this.uniformLocation.characterTextureUnit, 0) // テクスチャユニットの番号を送る @@@
       this.gl.uniform1i(this.uniformLocation.normalTextureUnit, 1) // テクスチャユニットの番号を送る @@@
@@ -373,17 +374,17 @@ export class App {
         Vec3.create(0, 3, 0)
       )
       const sphereMvp = Mat4.multiply(vp, sphereM)
-      // const pointNormalMatrix = Mat4.transpose(Mat4.inverse(sphereM))
+      const pointNormalMatrix = Mat4.transpose(Mat4.inverse(sphereM))
       this.gl.uniformMatrix4fv(this.uniformLocation.mvpMatrix, false, sphereMvp)
       this.gl.uniformMatrix4fv(this.uniformLocation.mMatrix, false, sphereM)
-      // this.gl.uniformMatrix4fv(
-      //   this.uniformLocation.normalMatrix,
-      //   false,
-      //   pointNormalMatrix
-      // )
-      // this.gl.uniform3fv(this.uniformLocation.lightPosition, lightPosition)
+      this.gl.uniformMatrix4fv(
+        this.uniformLocation.normalMatrix,
+        false,
+        pointNormalMatrix
+      )
       this.gl.uniform1i(this.uniformLocation.characterTextureUnit, 0) // テクスチャユニットの番号を送る @@@
       this.gl.uniform1i(this.uniformLocation.normalTextureUnit, 1) // テクスチャユニットの番号を送る @@@
+      // this.gl.uniform3fv(this.uniformLocation.lightPosition, lightPosition)
 
       // VBO と IBO を設定し、描画する
       WebGLUtility.enableBuffer(
