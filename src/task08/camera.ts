@@ -33,7 +33,7 @@ export class WebGLOrbitCamera {
   private minDistance: number
   private maxDistance: number
   private moveScale: number
-  public position: Vec3
+  private position: Vec3
   private center: Vec3
   private upDirection: Vec3
   private defaultPosition: Vec3

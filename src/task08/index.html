@@ -4,9 +4,29 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="/style.css" rel="stylesheet" />
-    <title>Task 03</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@primer/css/dist/primer.css"
+    />
+    <title>Task 08</title>
   </head>
   <body>
-    TBD
+    <div class="p-4" style="position: relative; z-index: 1">
+      <h1 class="title mb-2">TASK 08</h1>
+      <p>
+        <a
+          href="https://github.com/ryo620org/webgl-school-task/tree/master/src/task08"
+          target="_blank"
+          >View in Github</a
+        ><br />
+        <a href="/">Back to Index</a>
+      </p>
+    </div>
+    <div
+      style="display: flex; justify-content: center; position: fixed; top: 0"
+    >
+      <canvas id="app" style="width: 100vw; height: 100vh"></canvas>
+    </div>
+    <script type="module" src="./main.ts"></script>
   </body>
 </html>

@@ -1,15 +1,15 @@
 precision mediump float;
 
-uniform sampler2D textureUnit; // テクスチャ @@@
+uniform sampler2D characterTextureUnit;
+uniform sampler2D normalTextureUnit;
 
 varying vec4 vColor;
-varying vec2 vTexCoord; // テクスチャ座標 @@@
+varying vec2 vTexCoord;
 
 void main() {
-  // テクスチャから、テクスチャ座標の位置の色を取り出す @@@
-  // ※フラグメントシェーダはピクセルの単位で動作していることを念頭に
-  vec4 textureColor = texture2D(textureUnit, vTexCoord);
+  vec4 characterTextureColor = texture2D(characterTextureUnit, vTexCoord);
+  vec4 normalTextureColor = texture2D(normalTextureUnit, vTexCoord);
 
-  gl_FragColor = vColor * textureColor;
+  gl_FragColor = vColor * characterTextureColor * normalTextureColor;
 }
 

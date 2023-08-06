@@ -14,25 +14,16 @@ export class App {
   private planeVBO?: WebGLBuffer[]
   private planeIBO?: WebGLBuffer
 
-  private sphereGeometry?: Geometry
-  private sphereVBO?: WebGLBuffer[]
-  private sphereIBO?: WebGLBuffer
-
   private attributeLocation: number[] = []
   private attributeStride: number[] = []
 
-  private characterTexture?: WebGLTexture
-  private normalTexture?: WebGLTexture
+  private texture?: WebGLTexture
   private isRight = true // 右向きであるかどうか
 
   private uniformLocation?: {
     mvpMatrix: WebGLUniformLocation
-    mMatrix: WebGLUniformLocation
-    // normalMatrix: WebGLUniformLocation
-    // eyePosition: WebGLUniformLocation
-    // lightPosition: WebGLUniformLocation
-    characterTextureUnit: WebGLUniformLocation
-    normalTextureUnit: WebGLUniformLocation
+    normalMatrix: WebGLUniformLocation
+    textureUnit: WebGLUniformLocation
   }
 
   private geoMetoryPosition = {
@@ -45,9 +36,9 @@ export class App {
 
   // クリアカラー
   private CLEAR_COLOR = {
-    r: 0.3,
-    g: 0.3,
-    b: 0.3,
+    r: 0.9,
+    g: 0.9,
+    b: 0.9,
   }
 
   constructor(id: string) {
@@ -79,7 +70,7 @@ export class App {
     // カリングフェイス、深度テストのオプション設定
     // this.gl.enable(this.gl.CULL_FACE)
     // this.gl.enable(this.gl.DEPTH_TEST)
-    // this.gl.enable(this.gl.BLEND)
+    this.gl.enable(this.gl.BLEND)
     this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA)
 
     // 初期時間を取得
@@ -125,18 +116,8 @@ export class App {
   loadTexture(): Promise<void> {
     return new Promise(async (resolve, reject) => {
       try {
-        const characterTexture = await WebGLUtility.loadImage(
-          './character-texture.png'
-        )
-        this.characterTexture = WebGLUtility.createTexture(
-          this.gl,
-          characterTexture
-        )
-
-        const normalTexture = await WebGLUtility.loadImage(
-          './normal-texture.png'
-        )
-        this.normalTexture = WebGLUtility.createTexture(this.gl, normalTexture)
+        const image = await WebGLUtility.loadImage('./animation-texture.png')
+        this.texture = WebGLUtility.createTexture(this.gl, image)
         resolve()
       } catch (error) {
         reject(error)
@@ -158,18 +139,11 @@ export class App {
     // VBO と IBO を生成する
     this.planeVBO = [
       WebGLUtility.createVBO(this.gl, this.planeGeometry.position),
+      WebGLUtility.createVBO(this.gl, this.planeGeometry.normal),
       WebGLUtility.createVBO(this.gl, this.planeGeometry.color),
-      WebGLUtility.createVBO(this.gl, this.planeGeometry.texCoord),
+      WebGLUtility.createVBO(this.gl, this.planeGeometry.texCoord), // テクスチャ座標 @@@
     ]
     this.planeIBO = WebGLUtility.createIBO(this.gl, this.planeGeometry.index)
-
-    this.sphereGeometry = WebGLGeometry.sphere(8, 12, 0.05, [0.9, 0.9, 1.0])
-    this.sphereVBO = [
-      WebGLUtility.createVBO(this.gl, this.sphereGeometry.position),
-      WebGLUtility.createVBO(this.gl, this.sphereGeometry.color),
-      WebGLUtility.createVBO(this.gl, this.sphereGeometry.texCoord),
-    ]
-    this.sphereIBO = WebGLUtility.createIBO(this.gl, this.sphereGeometry.index)
   }
 
   // location を設定して、shader とのやりとりを可能にする
@@ -179,54 +153,34 @@ export class App {
     // attribute location の取得
     this.attributeLocation = [
       this.gl.getAttribLocation(this.program, 'position'),
+      this.gl.getAttribLocation(this.program, 'normal'),
       this.gl.getAttribLocation(this.program, 'color'),
       this.gl.getAttribLocation(this.program, 'texCoord'), // テクスチャ座標 @@@
     ]
-    console.log(this.attributeLocation)
     // attribute のストライド
     this.attributeStride = [
       3, // position
+      3, // normal
       4, // color
       2, // uv
     ]
 
     const mvpMatrix = this.gl.getUniformLocation(this.program, 'mvpMatrix')
-    const mMatrix = this.gl.getUniformLocation(this.program, 'mMatrix')
-    // const eyePosition = this.gl.getUniformLocation(this.program, 'eyePosition')
-    // const normalMatrix = this.gl.getUniformLocation(
-    //   this.program,
-    //   'normalMatrix'
-    // )
-    // const lightPosition = this.gl.getUniformLocation(
-    //   this.program,
-    //   'lightPosition'
-    // )
-    const characterTextureUnit = this.gl.getUniformLocation(
+    const normalMatrix = this.gl.getUniformLocation(
       this.program,
-      'characterTextureUnit'
+      'normalMatrix'
     )
-    const normalTextureUnit = this.gl.getUniformLocation(
-      this.program,
-      'normalTextureUnit'
-    )
+    const textureUnit = this.gl.getUniformLocation(this.program, 'textureUnit')
 
     if (!mvpMatrix) throw new Error('mvpMatrix is null')
-    if (!mMatrix) throw new Error('mMatrix is null')
-    // if (!eyePosition) throw new Error('eyePosition is null')
-    // if (!normalMatrix) throw new Error('normalMatrix is null')
-    // if (!lightPosition) throw new Error('lightPosition is null')
-    if (!characterTextureUnit) throw new Error('characterTextureUnit is null')
-    if (!normalTextureUnit) throw new Error('normalTextureUnit is null')
+    if (!normalMatrix) throw new Error('normalMatrix is null')
+    if (!textureUnit) throw new Error('textureUnit is null')
 
     // uniform location の取得
     this.uniformLocation = {
       mvpMatrix,
-      mMatrix,
-      // eyePosition,
-      // normalMatrix,
-      // lightPosition,
-      characterTextureUnit,
-      normalTextureUnit,
+      normalMatrix,
+      textureUnit,
     }
   }
 
@@ -255,11 +209,7 @@ export class App {
       !this.planeVBO ||
       !this.planeIBO ||
       !this.planeGeometry ||
-      !this.sphereVBO ||
-      !this.sphereIBO ||
-      !this.sphereGeometry ||
-      !this.characterTexture ||
-      !this.normalTexture
+      !this.texture
     )
       return
 
@@ -284,44 +234,32 @@ export class App {
 
     this.gl.useProgram(this.program)
 
-    // 証明の位置計算
-    const lightPosition = [Math.sin(nowTime * 2), Math.cos(nowTime * 2), 0.0]
-
-    // plane の変換・描画
-    {
-      // 変換・描画
-      // モデル座標変換行列（フラグが立っている場合だけ回転させる）
-      const m = Mat4.translate(
-        Mat4.identity(),
-        Vec3.create(
-          this.geoMetoryPosition.x,
-          this.geoMetoryPosition.y,
-          this.geoMetoryPosition.z
-        )
+    // 変換・描画
+    // モデル座標変換行列（フラグが立っている場合だけ回転させる）
+    const m = Mat4.translate(
+      Mat4.identity(),
+      Vec3.create(
+        this.geoMetoryPosition.x,
+        this.geoMetoryPosition.y,
+        this.geoMetoryPosition.z
       )
-      const mvp = Mat4.multiply(vp, m)
-      // const normalMatrix = Mat4.transpose(Mat4.inverse(m))
+    )
+    const mvp = Mat4.multiply(vp, m)
+    const normalMatrix = Mat4.transpose(Mat4.inverse(m))
 
-      this.gl.activeTexture(this.gl.TEXTURE0)
-      this.gl.bindTexture(this.gl.TEXTURE_2D, this.characterTexture)
+    this.gl.activeTexture(this.gl.TEXTURE0)
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture)
 
-      this.gl.activeTexture(this.gl.TEXTURE1)
-      this.gl.bindTexture(this.gl.TEXTURE_2D, this.normalTexture)
+    // プログラムオブジェクトを選択し uniform 変数を更新する
+    this.gl.uniformMatrix4fv(this.uniformLocation.mvpMatrix, false, mvp)
+    this.gl.uniformMatrix4fv(
+      this.uniformLocation.normalMatrix,
+      false,
+      normalMatrix
+    )
 
-      // プログラムオブジェクトを選択し uniform 変数を更新する
-      this.gl.uniformMatrix4fv(this.uniformLocation.mvpMatrix, false, mvp)
-      this.gl.uniformMatrix4fv(this.uniformLocation.mMatrix, false, m)
-      // this.gl.uniform3fv(this.uniformLocation.eyePosition, this.camera.position)
-      // this.gl.uniformMatrix4fv(
-      //   this.uniformLocation.normalMatrix,
-      //   false,
-      //   normalMatrix
-      // )
-      // this.gl.uniform3fv(this.uniformLocation.lightPosition, lightPosition)
-      this.gl.uniform1i(this.uniformLocation.characterTextureUnit, 0) // テクスチャユニットの番号を送る @@@
-      this.gl.uniform1i(this.uniformLocation.normalTextureUnit, 1) // テクスチャユニットの番号を送る @@@
-
-      // texCoord を更新する
+    // texCoord を更新する
+    {
       const index = Math.floor(nowTime * 8) % 8
       this.planeGeometry.texCoord = this.isRight
         ? [
@@ -345,61 +283,26 @@ export class App {
             0.0 + 0.125 * index,
             0.125,
           ]
-      this.planeVBO[2] = WebGLUtility.createVBO(
+      this.planeVBO[3] = WebGLUtility.createVBO(
         this.gl,
         this.planeGeometry.texCoord
       )
-
-      // VBO と IBO を設定し、描画する
-      WebGLUtility.enableBuffer(
-        this.gl,
-        this.planeVBO,
-        this.attributeLocation,
-        this.attributeStride,
-        this.planeIBO
-      )
-      this.gl.drawElements(
-        this.gl.TRIANGLES,
-        this.planeGeometry.index.length,
-        this.gl.UNSIGNED_SHORT,
-        0
-      )
     }
 
-    // sphereの変換・描画
-    {
-      const sphereM = Mat4.translate(
-        Mat4.rotate(Mat4.identity(), -nowTime * 2, Vec3.create(0.0, 0.0, 1.0)),
-        Vec3.create(0, 3, 0)
-      )
-      const sphereMvp = Mat4.multiply(vp, sphereM)
-      // const pointNormalMatrix = Mat4.transpose(Mat4.inverse(sphereM))
-      this.gl.uniformMatrix4fv(this.uniformLocation.mvpMatrix, false, sphereMvp)
-      this.gl.uniformMatrix4fv(this.uniformLocation.mMatrix, false, sphereM)
-      // this.gl.uniformMatrix4fv(
-      //   this.uniformLocation.normalMatrix,
-      //   false,
-      //   pointNormalMatrix
-      // )
-      // this.gl.uniform3fv(this.uniformLocation.lightPosition, lightPosition)
-      this.gl.uniform1i(this.uniformLocation.characterTextureUnit, 0) // テクスチャユニットの番号を送る @@@
-      this.gl.uniform1i(this.uniformLocation.normalTextureUnit, 1) // テクスチャユニットの番号を送る @@@
-
-      // VBO と IBO を設定し、描画する
-      WebGLUtility.enableBuffer(
-        this.gl,
-        this.sphereVBO,
-        this.attributeLocation,
-        this.attributeStride,
-        this.sphereIBO
-      )
-      this.gl.drawElements(
-        this.gl.TRIANGLES,
-        this.sphereGeometry.index.length,
-        this.gl.UNSIGNED_SHORT,
-        0
-      )
-    }
+    // VBO と IBO を設定し、描画する
+    WebGLUtility.enableBuffer(
+      this.gl,
+      this.planeVBO,
+      this.attributeLocation,
+      this.attributeStride,
+      this.planeIBO
+    )
+    this.gl.drawElements(
+      this.gl.TRIANGLES,
+      this.planeGeometry.index.length,
+      this.gl.UNSIGNED_SHORT,
+      0
+    )
   }
 
   move(x: number, y: number) {
