@@ -13,7 +13,7 @@ varying vec2 vTexCoord;
 void main() {
   vec4 characterTextureColor = texture2D(characterTextureUnit, vTexCoord);
   vec4 normalTextureColor = texture2D(normalTextureUnit, vTexCoord);
-  vec3 normal = vec3(normalTextureColor.r * 2.0 - 1.0, normalTextureColor.g * 2.0 - 1.0, normalTextureColor.b);
+  vec3 normal = normalTextureColor.rgb * 2.0 - 1.0;
 
   // ライトベクトル = ライト位置 - フラグメント位置
   vec3 lightVector = lightPosition - vPosition;
