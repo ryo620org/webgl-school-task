@@ -31,15 +31,15 @@ export class App {
     mvpMatrix: WebGLUniformLocation
     mMatrix: WebGLUniformLocation
     invMatrix: WebGLUniformLocation
+    lightPosition: WebGLUniformLocation
     characterTextureUnit: WebGLUniformLocation
     normalTextureUnit: WebGLUniformLocation
-    lightPosition: WebGLUniformLocation
   }
 
   private geoMetoryPosition = {
     x: 0,
     y: 0,
-    z: 0,
+    z: -0.2,
   }
 
   private startTime = 0
@@ -79,7 +79,7 @@ export class App {
 
     // カリングフェイス、深度テストのオプション設定
     // this.gl.enable(this.gl.CULL_FACE)
-    this.gl.enable(this.gl.DEPTH_TEST)
+    // this.gl.enable(this.gl.DEPTH_TEST)
     this.gl.enable(this.gl.BLEND)
     this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA)
 
@@ -162,6 +162,7 @@ export class App {
     // VBO と IBO を生成する
     this.planeVBO = [
       WebGLUtility.createVBO(this.gl, this.planeGeometry.position),
+      WebGLUtility.createVBO(this.gl, this.planeGeometry.normal),
       WebGLUtility.createVBO(this.gl, this.planeGeometry.color),
       WebGLUtility.createVBO(this.gl, this.planeGeometry.texCoord),
     ]
@@ -170,6 +171,7 @@ export class App {
     this.sphereGeometry = WebGLGeometry.sphere(8, 12, 0.05, [0.9, 0.9, 1.0])
     this.sphereVBO = [
       WebGLUtility.createVBO(this.gl, this.sphereGeometry.position),
+      WebGLUtility.createVBO(this.gl, this.sphereGeometry.normal),
       WebGLUtility.createVBO(this.gl, this.sphereGeometry.color),
       WebGLUtility.createVBO(this.gl, this.sphereGeometry.texCoord),
     ]
@@ -183,21 +185,25 @@ export class App {
     // attribute location の取得
     this.attributeLocation = [
       this.gl.getAttribLocation(this.program, 'position'),
+      this.gl.getAttribLocation(this.program, 'normal'),
       this.gl.getAttribLocation(this.program, 'color'),
-      this.gl.getAttribLocation(this.program, 'texCoord'), // テクスチャ座標 @@@
+      this.gl.getAttribLocation(this.program, 'texCoord'),
     ]
-    console.log(this.attributeLocation)
     // attribute のストライド
     this.attributeStride = [
       3, // position
+      3, // normal
       4, // color
-      2, // uv
+      2, // texCoord
     ]
 
     const mvpMatrix = this.gl.getUniformLocation(this.program, 'mvpMatrix')
     const mMatrix = this.gl.getUniformLocation(this.program, 'mMatrix')
     const invMatrix = this.gl.getUniformLocation(this.program, 'invMatrix')
-
+    const lightPosition = this.gl.getUniformLocation(
+      this.program,
+      'lightPosition'
+    )
     const characterTextureUnit = this.gl.getUniformLocation(
       this.program,
       'characterTextureUnit'
@@ -206,26 +212,22 @@ export class App {
       this.program,
       'normalTextureUnit'
     )
-    const lightPosition = this.gl.getUniformLocation(
-      this.program,
-      'lightPosition'
-    )
 
     if (!mvpMatrix) throw new Error('mvpMatrix is null')
     if (!mMatrix) throw new Error('mMatrix is null')
     if (!invMatrix) throw new Error('invMatrix is null')
+    if (!lightPosition) throw new Error('lightPosition is null')
     if (!characterTextureUnit) throw new Error('characterTextureUnit is null')
     if (!normalTextureUnit) throw new Error('normalTextureUnit is null')
-    if (!lightPosition) throw new Error('lightPosition is null')
 
     // uniform location の取得
     this.uniformLocation = {
       mvpMatrix,
       mMatrix,
       invMatrix,
+      lightPosition,
       characterTextureUnit,
       normalTextureUnit,
-      lightPosition,
     }
   }
 
@@ -314,11 +316,12 @@ export class App {
       this.gl.uniformMatrix4fv(this.uniformLocation.mMatrix, false, m)
       this.gl.uniformMatrix4fv(this.uniformLocation.invMatrix, false, invMatrix)
       this.gl.uniform3fv(this.uniformLocation.lightPosition, lightPosition)
-      this.gl.uniform1i(this.uniformLocation.characterTextureUnit, 0) // テクスチャユニットの番号を送る @@@
-      this.gl.uniform1i(this.uniformLocation.normalTextureUnit, 1) // テクスチャユニットの番号を送る @@@
+      this.gl.uniform1i(this.uniformLocation.characterTextureUnit, 0)
+      this.gl.uniform1i(this.uniformLocation.normalTextureUnit, 1)
 
       // texCoord を更新する
       const index = Math.floor(nowTime * 8) % 8
+
       this.planeGeometry.texCoord = [
         0.0 + 0.125 * index,
         0.0,
@@ -330,29 +333,7 @@ export class App {
         0.125,
       ]
 
-      // this.planeGeometry.texCoord = this.isRight
-      //   ? [
-      //       0.0 + 0.125 * index,
-      //       0.0,
-      //       0.125 + 0.125 * index,
-      //       0.0,
-      //       0.0 + 0.125 * index,
-      //       0.125,
-      //       0.125 + 0.125 * index,
-      //       0.125,
-      //     ]
-      //   : [
-      //       0.125 + 0.125 * index,
-      //       0.0,
-      //       0.0 + 0.125 * index,
-      //       0.0,
-
-      //       0.125 + 0.125 * index,
-      //       0.125,
-      //       0.0 + 0.125 * index,
-      //       0.125,
-      //     ]
-      this.planeVBO[2] = WebGLUtility.createVBO(
+      this.planeVBO[3] = WebGLUtility.createVBO(
         this.gl,
         this.planeGeometry.texCoord
       )
@@ -391,7 +372,7 @@ export class App {
 
       this.gl.activeTexture(this.gl.TEXTURE0)
       this.gl.bindTexture(this.gl.TEXTURE_2D, this.lightTexture)
-      this.gl.uniform1i(this.uniformLocation.characterTextureUnit, 0) // テクスチャユニットの番号を送る @@@
+      this.gl.uniform1i(this.uniformLocation.characterTextureUnit, 0)
 
       // VBO と IBO を設定し、描画する
       WebGLUtility.enableBuffer(
