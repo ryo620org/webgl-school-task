@@ -6,4 +6,4 @@ https://webgl.souhonzan.org/entry/?v=2387
 
 ## デプロイ先
 
-https://webgl-school-task.web.app/
+https://webgl-school.web.app/
